@@ -1,1 +1,1 @@
-# itransition inter purpose tasks
+# itransition intern purpose tasks

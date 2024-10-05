@@ -1,0 +1,7 @@
+.dt-scroll-head{
+    position: absolute !important;
+    z-index: 99999;
+}
+.dt-scroll{
+    width: 100%;
+}

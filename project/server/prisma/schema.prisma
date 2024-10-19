@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  ORGS
+  OTHER
+}
+
+enum DocumentType {
+  FORM
+  QUIZ
+  POLL
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+//*************************************************************************************************************************** USERS
+model Users {
+  id       BigInt @id @default(autoincrement())
+  username String @unique @db.VarChar(50)
+  email    String @unique @db.VarChar(150)
+  password String @db.VarChar(64) // bycript hash password 64-> 15 ba 32 hote pare
+
+  active   Boolean @default(false)
+  blocked  Boolean @default(false)
+  verified Boolean @default(false)
+  proUser  Boolean @default(false)
+
+  profile         Profiles?    @relation("userProfile")
+  setting         Settings?    @relation("userSetting")
+  WorkSpaces      WorkSpaces[] @relation("workSpaceOwner")
+  Spaces          Spaces[]     @relation("spaceOwner")
+  docCreator      Documents[]  @relation("documentCreator")
+  Documents       Documents[]  @relation("documentOwner")
+  Folders         Folders[]    @relation("folderOwner")
+  FoldCreator     Folders[]    @relation("folderCreator")
+  WorkSpaceMember Members[]    @relation("workSpaceMember")
+  WorkSpaceOwner  Members[]    @relation("workSpaceOwner")
+  Responser       Responses[]  @relation("responser")
+  Commenter       Comments[]   @relation("commenter")
+  ThemesCreator   Themes[]     @relation("themesCreator")
+}
+
+//*************************************************************************************************************************** PROFILES
+model Profiles {
+  id BigInt @id
+
+  fullName     String?   @db.VarChar(30)
+  phone        String[]  @db.VarChar(30)
+  address      Json      @db.JsonB //[{date:dateTime,permanent:bool,city,street,postalCode, ...}]
+  birthdate    DateTime? @db.Timestamptz() // UTC time
+  gender       Gender?
+  language     Int       @default(0) @db.SmallInt
+  countryIndex Int       @default(0) @db.SmallInt
+
+  createdAt DateTime @default(now()) @db.Timestamptz() // UTC time
+  updatedAt DateTime @updatedAt @db.Timestamptz() // UTC
+  others    Json?    @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
+
+  user     Users       @relation("userProfile", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Language UiLanguages @relation("appLanguage", fields: [language], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+
+  @@index([countryIndex])
+}
+
+//*************************************************************************************************************************** SETTINGS
+model Settings {
+  id               BigInt @id
+  currentWorkspace Int    @default(0) @db.SmallInt
+
+  ltr    Boolean @default(true) // left*to*right
+  hour24 Boolean @default(true)
+  light  Boolean @default(true) // light mode or dark mode appearance
+  others Json    @db.JsonB //dateTimeFormate,..
+
+  user             Users      @relation("userSetting", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  CurrentWorkspace WorkSpaces @relation("currentWorkspace", fields: [currentWorkspace, id], references: [index, owner], onUpdate: Cascade, onDelete: SetDefault)
+
+  @@index([currentWorkspace])
+}
+
+//*************************************************************************************************************************** WORKSPACES
+model WorkSpaces {
+  index Int    @db.SmallInt
+  owner BigInt
+
+  name       String  @db.VarChar(30)
+  code       BigInt? @unique // for join workspace with secret code
+  themeIndex BigInt  @default(0)
+  deleted    Boolean @default(false)
+  settings   Json    @db.JsonB // description, icon, 
+
+  Owner Users  @relation("workSpaceOwner", fields: [owner], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Theme Themes @relation("workSpaceTheme", fields: [themeIndex], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+
+  Spaces      Spaces[]   @relation
+  currentUser Settings[] @relation("currentWorkspace")
+  Members     Members[]  @relation("member")
+
+  @@id([owner, index])
+  @@unique([name, owner])
+}
+
+//*************************************************************************************************************************** SPACES
+model Spaces {
+  index     Int    @db.SmallInt
+  workSpace Int    @db.SmallInt
+  owner     BigInt
+
+  name     String  @db.VarChar(30)
+  deleted  Boolean @default(false)
+  settings Json?   @db.JsonB // desciption, icon, ..
+
+  Owner     Users      @relation("spaceOwner", fields: [owner], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  WorkSpace WorkSpaces @relation(fields: [workSpace, owner], references: [index, owner], onDelete: Cascade, onUpdate: Cascade)
+
+  Documents Documents[] @relation("documentSpace")
+  Folders   Folders[]   @relation("folderSpace")
+
+  @@id([owner, index])
+  @@unique([name, workSpace])
+}
+
+model Members {
+  id             BigInt
+  WorkspaceIndex Int       @db.SmallInt
+  workSpaceOwner BigInt
+  spaces         Int[]     @db.SmallInt
+  editor         Boolean[]
+
+  joinAt DateTime @default(now()) @db.Timestamptz()
+
+  WorkspaceMember Users      @relation("workSpaceMember", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  WorkSpaceOwner  Users      @relation("workSpaceOwner", fields: [workSpaceOwner], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  WorkSpace       WorkSpaces @relation("member", fields: [workSpaceOwner, WorkspaceIndex], references: [owner, index], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([workSpaceOwner, id, WorkspaceIndex])
+  @@index([workSpaceOwner])
+}
+
+model Folders {
+  id      BigInt  @id @default(autoincrement())
+  space   Int     @db.SmallInt
+  creator BigInt?
+  owner   BigInt
+  parent  BigInt?
+
+  title       String   @db.VarChar(30)
+  description String   @db.VarChar(300)
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @db.Timestamptz()
+  deleted     Boolean  @default(false)
+
+  shares   Json @db.JsonB
+  settings Json @db.JsonB
+
+  Creator Users?   @relation("folderCreator", fields: [creator], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  Owner   Users    @relation("folderOwner", fields: [owner], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Space   Spaces   @relation("folderSpace", fields: [space, owner], references: [index, owner], onDelete: Cascade, onUpdate: Cascade)
+  Parent  Folders? @relation("parentChild", fields: [parent], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  Documents  Documents[] @relation("parent")
+  ChildFolds Folders[]   @relation("parentChild")
+
+  @@index([title, owner])
+}
+
+//*************************************************************************************************************************** DOCUMENTATION ************************
+model Documents {
+  id         BigInt  @id @default(autoincrement())
+  spaceIndex Int     @db.SmallInt
+  folder     BigInt?
+  creator    BigInt
+  owner      BigInt
+
+  docType DocumentType
+
+  title        String   @db.VarChar(150)
+  description  String   @db.VarChar(300)
+  createdAt    DateTime @default(now()) @db.Timestamptz()
+  updatedAt    DateTime @updatedAt @db.Timestamptz()
+  published    Boolean  @default(false)
+  liveResponse Boolean  @default(false)
+  deleted      Boolean  @default(false)
+
+  pages    String[]
+  shares   Json     @db.JsonB
+  settings Json     @db.JsonB
+
+  Space   Spaces   @relation("documentSpace", fields: [owner, spaceIndex], references: [owner, index], onDelete: Cascade, onUpdate: Cascade)
+  Owner   Users    @relation("documentOwner", fields: [owner], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Creator Users    @relation("documentCreator", fields: [creator], references: [id], onUpdate: Cascade)
+  Folder  Folders? @relation("parent", fields: [folder], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  Blocks    Blocks[]    @relation("documentBlock")
+  Responses Responses[] @relation("response")
+  Comments  Comments[]  @relation("comment")
+
+  @@index([folder, creator, owner, title])
+}
+
+model Blocks {
+  index     Int     @db.SmallInt
+  name      String? @db.VarChar(30)
+  pageIndex Int     @db.SmallInt
+
+  document BigInt
+
+  widthRatio    Int  @db.SmallInt
+  titleFeild    Json @db.JsonB
+  responseFeild Json @db.JsonB
+  settings      Json @db.JsonB
+
+  updatedBy BigInt
+  updatedAt DateTime @updatedAt @db.Timestamptz()
+
+  Document Documents @relation("documentBlock", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  Responses Responses[] @relation("blockResponse")
+
+  @@id([document, pageIndex, index])
+}
+
+model Responses {
+  index          Int     @db.SmallInt
+  pageIndex      Int     @db.SmallInt
+  document       BigInt //document id
+  responseBy     BigInt? //user
+  userIdentifire String
+
+  data          Json     @db.JsonB
+  responseStart DateTime @db.Timestamptz()
+  responseEnd   DateTime @default(now()) @db.Timestamptz()
+
+  Block     Blocks    @relation("blockResponse", fields: [document, pageIndex, index], references: [document, pageIndex, index], onDelete: Cascade, onUpdate: Cascade)
+  Document  Documents @relation("response", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Responser Users?    @relation("responser", fields: [responseBy], references: [id], onUpdate: Cascade, onDelete: SetNull)
+
+  @@id([userIdentifire, document, pageIndex, index])
+}
+
+model Comments {
+  id                  BigInt  @default(dbgenerated("(extract(epoch from now()) * 1000)::bigint")) // created at
+  document            BigInt
+  owner               BigInt?
+  recieveBy           String? // who get the reply (userIdentifire)
+  replyFor            BigInt? // for which comment
+  userIdentifire      String
+  commentForTemplates Boolean @default(false)
+
+  data      Json     @db.JsonB
+  updatedAt DateTime @updatedAt @db.Timestamptz()
+
+  Reply    Comments? @relation("reply", fields: [replyFor, document, recieveBy], references: [id, document, userIdentifire], onDelete: Cascade, onUpdate: Cascade)
+  Document Documents @relation("comment", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  Owner    Users?    @relation("commenter", fields: [owner], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  Replies Comments[] @relation("reply")
+
+  @@id([userIdentifire, document, id])
+}
+
+model Templates {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(150)
+  description String   @db.VarChar(300)
+  verified    Boolean  @default(false)
+  deleted     Boolean  @default(false)
+  catagories  Int      @default(0) @db.SmallInt // catagory indexes array catagories store on backend inshaAllah
+  updatedAt   DateTime @updatedAt @db.Timestamptz()
+  contents    Json     @db.JsonB // blocks,..
+  reviews     Json     @db.JsonB
+
+  @@index([title, description])
+}
+
+model UiLanguages {
+  id      Int     @id @default(autoincrement()) @db.SmallInt
+  name    String  @unique @db.VarChar(30)
+  code    String  @unique @db.Char(4)
+  deleted Boolean @default(false)
+  content Json    @db.JsonB
+
+  User Profiles[] @relation("appLanguage")
+}
+
+model Themes {
+  id          BigInt  @id @default(autoincrement())
+  createdBy   BigInt?
+  name        String  @unique @db.VarChar(30)
+  forDarkMode Boolean @default(false)
+  verified    Boolean @default(false) // editor choic
+  deleted     Boolean @default(false)
+  content     Json    @db.JsonB // themes
+  reviews     Json    @db.JsonB
+
+  Owner      Users?       @relation("themesCreator", fields: [createdBy], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  WorkSpaces WorkSpaces[] @relation("workSpaceTheme")
+}

@@ -194,6 +194,7 @@ model Documents {
   published    Boolean  @default(false)
   liveResponse Boolean  @default(false)
   deleted      Boolean  @default(false)
+  isCurrent    Boolean  @default(false)
 
   pages    String[]
   shares   Json     @db.JsonB

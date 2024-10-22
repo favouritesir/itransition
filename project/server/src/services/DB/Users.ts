@@ -17,7 +17,3 @@
  * create new user
  *
  */
-
-abstract class User {
-  // readonly user
-}

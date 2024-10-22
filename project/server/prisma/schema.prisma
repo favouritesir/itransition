@@ -28,10 +28,10 @@ enum AccountStatus {
 
 //*************************************************************************************************************************** USERS
 model Users {
-  id       BigInt @id @default(autoincrement())
-  username String @unique @db.VarChar(50)
-  email    String @unique @db.VarChar(150)
-  password String @db.VarChar(64) // bycript hash password 64-> 15 ba 32 hote pare
+  id       BigInt  @id @default(autoincrement())
+  username String? @unique @db.VarChar(50)
+  email    String  @unique @db.VarChar(150)
+  password String  @db.VarChar(64) // bycript hash password 64-> 15 ba 32 hote pare
 
   active   Boolean @default(false)
   blocked  Boolean @default(false)
@@ -59,15 +59,15 @@ model Profiles {
 
   fullName     String?   @db.VarChar(30)
   phone        String[]  @db.VarChar(30)
-  address      Json      @db.JsonB //[{date:dateTime,permanent:bool,city,street,postalCode, ...}]
-  birthdate    DateTime? @db.Timestamptz() // UTC time
+  address      Json?     @db.JsonB //[{date:dateTime,permanent:bool,city,street,postalCode, ...}]
+  birthdate    DateTime? @db.Date
   gender       Gender?
   language     Int       @default(0) @db.SmallInt
   countryIndex Int       @default(0) @db.SmallInt
 
   createdAt DateTime @default(now()) @db.Timestamptz() // UTC time
-  updatedAt DateTime @updatedAt @db.Timestamptz() // UTC
-  others    Json?    @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz()
+  others    Json     @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
 
   user     Users       @relation("userProfile", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Language UiLanguages @relation("appLanguage", fields: [language], references: [id], onDelete: SetDefault, onUpdate: Cascade)
@@ -139,6 +139,7 @@ model Members {
   workSpaceOwner BigInt
   spaces         Int[]     @db.SmallInt
   editor         Boolean[]
+  settings       Json      @db.JsonB
 
   joinAt DateTime @default(now()) @db.Timestamptz()
 
@@ -160,7 +161,7 @@ model Folders {
   title       String   @db.VarChar(30)
   description String   @db.VarChar(300)
   createdAt   DateTime @default(now()) @db.Timestamptz()
-  updatedAt   DateTime @updatedAt @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz()
   deleted     Boolean  @default(false)
 
   shares   Json @db.JsonB
@@ -180,6 +181,7 @@ model Folders {
 //*************************************************************************************************************************** DOCUMENTATION ************************
 model Documents {
   id         BigInt  @id @default(autoincrement())
+  index      Int?    @db.SmallInt
   spaceIndex Int     @db.SmallInt
   folder     BigInt?
   creator    BigInt
@@ -190,11 +192,12 @@ model Documents {
   title        String   @db.VarChar(150)
   description  String   @db.VarChar(300)
   createdAt    DateTime @default(now()) @db.Timestamptz()
-  updatedAt    DateTime @updatedAt @db.Timestamptz()
+  updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz()
+  isCurrent    Boolean  @default(false)
   published    Boolean  @default(false)
   liveResponse Boolean  @default(false)
   deleted      Boolean  @default(false)
-  isCurrent    Boolean  @default(false)
+  trashed      Boolean  @default(false)
 
   pages    String[]
   shares   Json     @db.JsonB
@@ -225,7 +228,7 @@ model Blocks {
   settings      Json @db.JsonB
 
   updatedBy BigInt
-  updatedAt DateTime @updatedAt @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz()
 
   Document Documents @relation("documentBlock", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
@@ -243,7 +246,7 @@ model Responses {
 
   data          Json     @db.JsonB
   responseStart DateTime @db.Timestamptz()
-  responseEnd   DateTime @default(now()) @db.Timestamptz()
+  responseEnd   DateTime @db.Timestamptz()
 
   Block     Blocks    @relation("blockResponse", fields: [document, pageIndex, index], references: [document, pageIndex, index], onDelete: Cascade, onUpdate: Cascade)
   Document  Documents @relation("response", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -262,7 +265,7 @@ model Comments {
   commentForTemplates Boolean @default(false)
 
   data      Json     @db.JsonB
-  updatedAt DateTime @updatedAt @db.Timestamptz()
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz()
 
   Reply    Comments? @relation("reply", fields: [replyFor, document, recieveBy], references: [id, document, userIdentifire], onDelete: Cascade, onUpdate: Cascade)
   Document Documents @relation("comment", fields: [document], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -280,7 +283,7 @@ model Templates {
   verified    Boolean  @default(false)
   deleted     Boolean  @default(false)
   catagories  Int      @default(0) @db.SmallInt // catagory indexes array catagories store on backend inshaAllah
-  updatedAt   DateTime @updatedAt @db.Timestamptz()
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz()
   contents    Json     @db.JsonB // blocks,..
   reviews     Json     @db.JsonB
 
@@ -309,4 +312,16 @@ model Themes {
 
   Owner      Users?       @relation("themesCreator", fields: [createdBy], references: [id], onUpdate: Cascade, onDelete: SetNull)
   WorkSpaces WorkSpaces[] @relation("workSpaceTheme")
+}
+
+model Developers {
+  id       Int      @id @default(autoincrement())
+  name     String?  @db.VarChar(50)
+  email    String   @db.VarChar(150)
+  password String   @db.VarChar(64)
+  apiKey   String   @unique @default(dbgenerated("cuid()")) @db.Char(25)
+  joinAt   DateTime @default(now()) @db.Timestamptz()
+  renewAt  DateTime @default(now()) @db.Timestamptz()
+  deleted  Boolean  @default(false)
+  config   Json     @db.JsonB
 }

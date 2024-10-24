@@ -8,6 +8,7 @@
 import { Response } from "express";
 
 export const allStatus: { [key: number]: string } = {
+  0: "No Status",
   200: "OK",
   400: "Bad Request",
   401: "Unauthorized",
@@ -34,8 +35,8 @@ class Result {
   private statusStr: string;
   constructor(res: Response) {
     this.res = res;
-    this.code = 200;
-    this.statusStr = allStatus[200];
+    this.code = 0;
+    this.statusStr = "";
     Object.seal(this);
   }
   status(c: number = 200) {
@@ -44,12 +45,13 @@ class Result {
     return this;
   }
   send(obj: ResType = {}) {
-    this.res.status(this.code).json({
+    const code = this.code || obj.code || 200;
+    this.res.status(code).json({
+      code,
       message: obj.msg || "",
-      status: this.statusStr,
-      code: this.code,
+      status: this.statusStr || allStatus[obj.code!] || "success",
       data: obj.data || null,
-      err: obj.err || false,
+      err: obj.err || allStatus[code] != "OK",
       hint: obj.hint || "",
       links: obj.links || null,
     });

@@ -6,21 +6,17 @@ import {
   NextFunction,
 } from "express";
 
-import authRoutes from "./auth.route";
 import $response from "../services/response.services";
+import authRoutes from "./auth.route";
+import devRoutes from "./dev.route";
+import userRoute from "../middlewares/userRoute.middleware";
+import { API } from "../controllers/api.controller";
 const router = Router();
 
 // Define the routes
 router.use("/auth", authRoutes);
-router.get("/", (req, res) => {
-  res.setHeader("Content-Type", "application/javascript");
-  res.send(`
-      document.addEventListener('DOMContentLoaded', function() {
-          console.log('Dynamic JavaScript loaded from server!');
-          alert('This JavaScript is coming from the server!');
-      });
-    `);
-});
+router.use("/dev", devRoutes);
+router.get("/", userRoute, API);
 
 /***************************************************************************************************** GLOBAL PAGE NOT FOUND */
 router.use((req, res, next) => {

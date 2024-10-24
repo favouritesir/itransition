@@ -9,7 +9,6 @@ router.post("/signup", register);
 router.get("/logout", logout);
 
 /************************************************************************************************* ERROR HANDLER */
-/***************************************************************************************************** GLOBAL PAGE NOT FOUND */
 router.use(error);
 
 export default router;

@@ -37,6 +37,7 @@ model Users {
   blocked  Boolean @default(false)
   verified Boolean @default(false)
   proUser  Boolean @default(false)
+  deleted  Boolean @default(false)
 
   profile         Profiles?    @relation("userProfile")
   setting         Settings?    @relation("userSetting")
@@ -57,38 +58,38 @@ model Users {
 model Profiles {
   id BigInt @id
 
-  fullName     String?   @db.VarChar(30)
-  phone        String[]  @db.VarChar(30)
-  address      Json?     @db.JsonB //[{date:dateTime,permanent:bool,city,street,postalCode, ...}]
-  birthdate    DateTime? @db.Date
-  gender       Gender?
-  language     Int       @default(0) @db.SmallInt
-  countryIndex Int       @default(0) @db.SmallInt
+  fullName      String?   @db.VarChar(30)
+  phone         String[]  @db.VarChar(30)
+  address       Json?     @db.JsonB //[{date:dateTime,permanent:bool,city,street,postalCode, ...}]
+  birthDate     DateTime? @db.Date
+  gender        Gender?
+  languageIndex Int       @default(0) @db.SmallInt
+  countryIndex  Int       @default(0) @db.SmallInt
 
   createdAt DateTime @default(now()) @db.Timestamptz() // UTC time
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz()
   others    Json     @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
 
   user     Users       @relation("userProfile", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  Language UiLanguages @relation("appLanguage", fields: [language], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+  Language UiLanguages @relation("appLanguage", fields: [languageIndex], references: [id], onDelete: SetDefault, onUpdate: Cascade)
 
   @@index([countryIndex])
 }
 
 //*************************************************************************************************************************** SETTINGS
 model Settings {
-  id               BigInt @id
-  currentWorkspace Int    @default(0) @db.SmallInt
+  id         BigInt  @id
+  currentDoc BigInt?
 
   ltr    Boolean @default(true) // left*to*right
   hour24 Boolean @default(true)
   light  Boolean @default(true) // light mode or dark mode appearance
-  others Json    @db.JsonB //dateTimeFormate,..
+  others Json?   @db.JsonB //dateTimeFormate,..
 
   user             Users      @relation("userSetting", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  CurrentWorkspace WorkSpaces @relation("currentWorkspace", fields: [currentWorkspace, id], references: [index, owner], onUpdate: Cascade, onDelete: SetDefault)
+  CurrentDocuments Documents? @relation("currentDocument", fields: [currentDoc], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  @@index([currentWorkspace])
+  @@index([currentDoc])
 }
 
 //*************************************************************************************************************************** WORKSPACES
@@ -105,9 +106,8 @@ model WorkSpaces {
   Owner Users  @relation("workSpaceOwner", fields: [owner], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Theme Themes @relation("workSpaceTheme", fields: [themeIndex], references: [id], onDelete: SetDefault, onUpdate: Cascade)
 
-  Spaces      Spaces[]   @relation
-  currentUser Settings[] @relation("currentWorkspace")
-  Members     Members[]  @relation("member")
+  Spaces  Spaces[]  @relation
+  Members Members[] @relation("member")
 
   @@id([owner, index])
   @@unique([name, owner])
@@ -193,7 +193,6 @@ model Documents {
   description  String   @db.VarChar(300)
   createdAt    DateTime @default(now()) @db.Timestamptz()
   updatedAt    DateTime @default(now()) @updatedAt @db.Timestamptz()
-  isCurrent    Boolean  @default(false)
   published    Boolean  @default(false)
   liveResponse Boolean  @default(false)
   deleted      Boolean  @default(false)
@@ -208,9 +207,11 @@ model Documents {
   Creator Users    @relation("documentCreator", fields: [creator], references: [id], onUpdate: Cascade)
   Folder  Folders? @relation("parent", fields: [folder], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  Blocks    Blocks[]    @relation("documentBlock")
-  Responses Responses[] @relation("response")
-  Comments  Comments[]  @relation("comment")
+  Current    Settings[]  @relation("currentDocument")
+  Blocks     Blocks[]    @relation("documentBlock")
+  Responses  Responses[] @relation("response")
+  Comments   Comments[]  @relation("comment")
+  settingsId BigInt
 
   @@index([folder, creator, owner, title])
 }
@@ -315,13 +316,23 @@ model Themes {
 }
 
 model Developers {
-  id       Int      @id @default(autoincrement())
-  name     String?  @db.VarChar(50)
-  email    String   @db.VarChar(150)
-  password String   @db.VarChar(64)
-  apiKey   String   @unique @default(dbgenerated("cuid()")) @db.Char(25)
-  joinAt   DateTime @default(now()) @db.Timestamptz()
-  renewAt  DateTime @default(now()) @db.Timestamptz()
-  deleted  Boolean  @default(false)
-  config   Json     @db.JsonB
+  id       Int     @id @default(autoincrement())
+  name     String? @db.VarChar(50)
+  email    String  @unique @db.VarChar(150)
+  password String  @db.VarChar(64)
+  deleted  Boolean @default(false)
+  API      API[]   @relation("apiOwner")
+}
+
+model API {
+  id        Int
+  domain    String   @db.VarChar(150)
+  apiKey    String   @unique @db.Char(64)
+  createdAt DateTime @default(now()) @db.Timestamptz()
+  renewAt   DateTime @default(now()) @db.Timestamptz()
+  config    Json     @db.JsonB
+
+  owner Developers @relation("apiOwner", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([id, domain])
 }

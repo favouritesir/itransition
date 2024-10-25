@@ -1,7 +1,7 @@
 import { BlockType } from "./Blocks.type";
 import { CommentType } from "./Comments.type";
 import { FolderType } from "./Folders.type";
-import { ShareType } from "./global.types";
+
 import { ResponseType } from "./Responses.type";
 import { SpaceType } from "./Spaces.type";
 import { UserType } from "./Users.type";

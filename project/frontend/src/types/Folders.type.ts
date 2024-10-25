@@ -1,5 +1,5 @@
 import { DocumentType } from "./Documents.type";
-import { ShareType } from "./global.types";
+
 import { SpaceType } from "./Spaces.type";
 import { UserType } from "./Users.type";
 

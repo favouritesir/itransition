@@ -23,7 +23,7 @@ export interface DocumentType {
   deleted?: boolean;
   trashed?: boolean;
   pages?: string[];
-  shares?: ShareType; // JSON for shares
+  // shares?: ShareType; // JSON for shares
   settings?: DocumentSettingsType; // JSON for document settings
   spaceDetail?: SpaceType;
   ownerDetail?: UserType;
@@ -34,4 +34,6 @@ export interface DocumentType {
   comments?: CommentType[];
 }
 
-export interface DocumentSettingsType {}
+export interface DocumentSettingsType {
+  formFields?: "";
+}

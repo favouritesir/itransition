@@ -14,7 +14,7 @@ export interface FolderType {
   createdAt?: Date;
   updatedAt?: Date;
   deleted?: boolean;
-  shares?: ShareType; // JSON for folder shares
+  // shares?: ShareType; // JSON for folder shares
   settings?: FolderSettingsType; // JSON for folder settings
   creatorDetail?: UserType;
   ownerDetail?: UserType;

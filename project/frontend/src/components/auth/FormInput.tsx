@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useEffect } from "react";
 
 export default function FormInput(props: any) {
   const {
@@ -14,38 +14,36 @@ export default function FormInput(props: any) {
     required,
     onChange,
     name,
+    err,
+    setErr,
   } = props;
-  const [inputErr, setInputErr] = useState(false);
-  const regex = new RegExp(rules);
 
-  const handleError = (e: any) => {
-    if (rules) {
-      const inputValue = e.target.value;
-      setInputErr(!regex.test(inputValue));
+  useEffect(() => {
+    if (rules && value) {
+      setErr(!rules.test(value));
     }
-  };
+  }, [value]);
 
   return (
     <div className={`form-control ${className || ""}`} style={style}>
       <label className="label">
-        <span
-          className={`label-text text-neutral-500  ${inputErr && "text-error"}`}
-        >
+        <span className={`label-text text-neutral-500  ${err && "text-error"}`}>
           {label}
         </span>
       </label>
       <input
         type={type}
         placeholder={placeholder}
-        className="input input-bordered bg-inherit w-full"
+        className={`input input-bordered bg-inherit w-full ${
+          err && "border-error"
+        }`}
         value={value}
-        onKeyUp={handleError}
-        onChange={onChange || handleError}
+        onChange={onChange}
         required={required}
         name={name}
       />
 
-      {inputErr && <span className="text-error">{errMsg}</span>}
+      {err && <span className="text-error">{errMsg}</span>}
     </div>
   );
 }

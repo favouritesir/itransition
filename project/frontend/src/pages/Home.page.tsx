@@ -6,7 +6,7 @@ export default function HomePage({ appLoad }: { appLoad: boolean }) {
   const { user } = useApp();
   const navigate = useNavigate();
   useEffect(() => {
-    if (user?.id) navigate("/auth");
+    if (!user?.id) navigate("/auth");
   }, []);
   return (
     <>

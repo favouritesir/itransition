@@ -1,16 +1,17 @@
 // import { Link } from "react-router-dom";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
-import FormInput from "../components/formComponents/FormInput";
+import FormInput from "../components/auth/FormInput";
 import useAxios from "../hooks/useAxios.hook";
+import ThemeController from "../components/utils/ThemeController";
 
-const LoginPage = () => {
-  const [loginMode, setLoginMode] = useState(false);
+const AuthPage = () => {
+  const [loginMode, setLoginMode] = useState(true);
   const [form, setForm] = useState({
     name: "",
     identifier: "",
     password: "",
   });
-  const { data, loading } = useAxios();
+  const { res, loading } = useAxios();
   const [alert, setAlert] = useState(false);
 
   // handleAuth function: TypeScript friendly type
@@ -24,8 +25,8 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    if (data) console.log(data);
-  }, [data]);
+    if (res) console.log(res);
+  }, [res]);
 
   // onChangeHandler function: Use ChangeEvent for correct typing
   const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,6 +40,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-200">
       <div className="w-full max-w-md p-8 space-y-4 bg-base-100 rounded-lg shadow-md">
+        <ThemeController className="m-2 w-5 h-5 fixed right-4 top-4"></ThemeController>
         {/* Name Input */}
         {!loginMode && (
           <FormInput
@@ -136,4 +138,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default AuthPage;

@@ -7,12 +7,12 @@ interface RequestOptions {
   config?: AxiosRequestConfig;
 }
 
-const useAxios = () => {
-  const [data, setData] = useState<any>(null);
+const useAxios = (url?: string, obj?: RequestOptions) => {
+  const [res, setRes] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<any>(null);
-  const [path, setPath] = useState<string>("");
-  const [opt, setOpt] = useState<RequestOptions>({});
+  const [path, setPath] = useState<string>(url || "");
+  const [opt, setOpt] = useState<RequestOptions>(obj || {});
 
   // setReq to set the URL and options
   const setReq = (url: string, options: RequestOptions = {}) => {
@@ -32,7 +32,7 @@ const useAxios = () => {
           ? await axios.post(path, body, config) // POST request if body exists
           : await axios.get(path, config); // GET request if no body
 
-        setData(response.data); // Set data from response
+        setRes(response.data); // Set data from response
       } catch (err: any) {
         setError(err); // Handle errors
       } finally {
@@ -43,7 +43,7 @@ const useAxios = () => {
     fetchData(); // Fetch data only if path is set
   }, [path, opt]); // Now watching both path and options for changes
 
-  return { data, loading, error, setReq };
+  return { res, loading, error, setReq };
 };
 
 export default useAxios;

@@ -1,14 +1,10 @@
 import { UserType } from "../types/Users.type";
 
-export class Api {
-  protected _user?: UserType;
-  constructor(user?: UserType) {
-    this._user = user;
-  }
-  get user() {
-    return this._user;
-  }
-  login() {}
-  logout() {}
-  register() {}
-}
+export const Api = {
+  user: null,
+  login: "/api/auth/login",
+  logout: "/api/auth/logout",
+  register: "/api/auth/register",
+  profile: "/api/users/:id",
+  settings: "/api/users/:id/settings",
+};

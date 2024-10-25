@@ -16,7 +16,7 @@ const router = Router();
 // Define the routes
 router.use("/auth", authRoutes);
 router.use("/dev", devRoutes);
-router.get("/", userRoute, API);
+router.get("/", API);
 
 /***************************************************************************************************** GLOBAL PAGE NOT FOUND */
 router.use((req, res, next) => {

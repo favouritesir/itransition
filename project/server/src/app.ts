@@ -16,17 +16,24 @@ import router from "./routes/router";
 import $response from "./services/response.services";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { apiUserAuth } from "./middlewares/apiUserAuth.middleware";
 
 /***************************************************************************************************** APP SETUP OR CONFIGURATION */
 const app = express();
+const corsOpt = {
+  origin: ["http://localhost:5173"],
+  methods: ["POST", "GET"],
+  credentials: true,
+};
 
 /***************************************************************************************************** GLOBAL MIDDLEWARE */
-app.use(cors());
+app.use(cors(corsOpt));
+app.options("*", cors(corsOpt));
 app.use(cookieParser());
 app.use(express.json());
 
 /***************************************************************************************************** ROUTES */
-app.use("/api/", router);
+app.use("/api/", /*apiUserAuth,*/ router);
 
 /***************************************************************************************************** GLOBAL ERROR HANDLER MIDDLEWARE */
 router.use(

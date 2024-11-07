@@ -9,7 +9,6 @@ import {
 import $response from "../services/response.services";
 import authRoutes from "./auth.route";
 import devRoutes from "./dev.route";
-import userRoute from "../middlewares/userRoute.middleware";
 import { API } from "../controllers/api.controller";
 const router = Router();
 

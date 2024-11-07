@@ -6,44 +6,66 @@ interface RequestOptions {
   body?: any;
   config?: AxiosRequestConfig;
 }
+axios.defaults.withCredentials = true;
 
-const useAxios = (url?: string, obj?: RequestOptions) => {
-  const [res, setRes] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<any>(null);
-  const [path, setPath] = useState<string>(url || "");
+const useAxios = (url: string = "", obj?: RequestOptions) => {
+  const [reqRes, setReqRes] = useState<any>(null);
+  const [requesting, setRequesting] = useState<boolean>(false);
+  const [newReq, setNewReq] = useState<boolean>(false);
+  const [path, setPath] = useState<string>(url);
   const [opt, setOpt] = useState<RequestOptions>(obj || {});
 
-  // setReq to set the URL and options
-  const setReq = (url: string, options: RequestOptions = {}) => {
-    setPath(url);
+  const [reqErr, setReqErr] = useState<any>(null);
+
+  /************************************************************************************************* SET NEW REQ FUNCTION */
+  const setReq = (newUrl?: string, options: RequestOptions = {}) => {
+    setRequesting(true); // Set loading true when new request is set
+    setReqRes(null); // Set request response when new request is
+    setPath((path) => newUrl || path); //finally set request path to update the useEffect dependency
     setOpt(options);
-    setLoading(true); // Set loading true when new request is set
+    setNewReq(true); // to make a new req
   };
 
+  /************************************************************************************************* FETCH DATA EFFECT */
   useEffect(() => {
-    if (!path) return; // If no path is set, do nothing
-
+    if (!path && !newReq) return; // If no path is set, do nothing
     const fetchData = async () => {
-      setLoading(true); // Start loading before fetching data
+      setRequesting(true); // Start loading before fetching data
       try {
         const { body, config } = opt; // Destructure body and config
-        const response = body
-          ? await axios.post(path, body, config) // POST request if body exists
-          : await axios.get(path, config); // GET request if no body
 
-        setRes(response.data); // Set data from response
+        // default headers for each request
+        const headers = {
+          Authorization: `${import.meta.env.VITE_SERVER_API_KEY}`,
+          "Content-Type": "application/json",
+          ...(config?.headers || {}), // Merge with existing headers, if any
+        };
+
+        // Make the actual request to the server with the constructed headers and options
+        const response = body
+          ? await axios.post(import.meta.env.VITE_SERVER + path, body, {
+              ...config,
+              headers,
+            }) // POST request if body exists
+          : await axios.get(import.meta.env.VITE_SERVER + path, {
+              ...config,
+              headers,
+            }); // GET request if no body
+
+        setReqRes(response.data); // Set data from response
       } catch (err: any) {
-        setError(err); // Handle errors
+        setReqErr(err);
+        setReqRes(err.response.data || {});
       } finally {
-        setLoading(false); // Stop loading after fetching
+        setRequesting(false); // Stop loading after fetching
+        setNewReq(false); // Reset newReq after fetching
       }
     };
 
     fetchData(); // Fetch data only if path is set
-  }, [path, opt]); // Now watching both path and options for changes
+  }, [newReq]); // Now watching both path and options for changes
 
-  return { res, loading, error, setReq };
+  return { reqErr, reqRes, requesting, setReq };
 };
 
 export default useAxios;

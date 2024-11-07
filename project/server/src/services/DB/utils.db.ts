@@ -2,18 +2,33 @@ import { Prisma } from "@prisma/client";
 
 export function buildWhere(condition: string): Prisma.UsersWhereInput {
   const parseCondition = (cond: string): Prisma.UsersWhereInput => {
+    // Custom regex to capture different patterns
     const regex = /(\d+)\s*([<>]=?)\s*(\w+)\s*([<>]=?)\s*(\d+)/;
     const match = cond.match(regex);
 
     if (match) {
-      const [, lowerValue, lowerOperator, field, upperOperator, upperValue] =
-        match;
-      return {
+      const [, value1, operator1, field, operator2, value2] = match;
+
+      const whereObject: Prisma.UsersWhereInput = {
         [field]: {
-          [lowerOperator === "<" ? "gt" : "gte"]: parseFloat(lowerValue),
-          [upperOperator === "<" ? "lt" : "lte"]: parseFloat(upperValue),
+          [operator1 === "<"
+            ? "gt"
+            : operator1 === "<="
+            ? "gte"
+            : operator1 === ">"
+            ? "lt"
+            : "lte"]: parseFloat(value1),
+          [operator2 === ">"
+            ? "gt"
+            : operator2 === ">="
+            ? "gte"
+            : operator2 === "<"
+            ? "lt"
+            : "lte"]: parseFloat(value2),
         },
       };
+
+      return whereObject;
     }
 
     const [field, operator, ...rest] = cond.split(/([=!<>]=?)/);
@@ -100,6 +115,7 @@ export function buildWhere(condition: string): Prisma.UsersWhereInput {
   conditions.forEach((cond) => {
     if (cond.startsWith("!")) {
       const innerCondition = cond.slice(1).trim();
+
       if (conditions.length > 1) {
         whereObject.AND.push({ NOT: handleComplexCondition(innerCondition) });
       } else {
@@ -118,3 +134,12 @@ export function buildWhere(condition: string): Prisma.UsersWhereInput {
 
   return whereObject;
 }
+
+// Example usage:
+// const condition1 = "10>id>5"; // id greater than 5 and less than 10
+// const condition2 = "10>=id>5"; // id greater than 5 and less than or equal to 10
+// const where1 = buildWhere(condition1);
+// const where2 = buildWhere(condition2);
+
+// console.log(JSON.stringify(where1, null, 2));
+// console.log(JSON.stringify(where2, null, 2));

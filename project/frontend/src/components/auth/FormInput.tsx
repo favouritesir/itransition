@@ -47,14 +47,3 @@ export default function FormInput(props: any) {
     </div>
   );
 }
-// FormInput.propTypes = {
-//   type: PropTypes.oneOf(["email", "text", "number", "password"]).isRequired, // 'type' must be a string and required
-//   placeholder: PropTypes.string, // 'placeholder' is optional and must be a string
-//   className: PropTypes.string, // 'className' is optional and must be a string
-//   label: PropTypes.string.isRequired, // 'label' must be a string and required
-//   rules: PropTypes.string, // 'rules' is optional and must be an strings
-//   value: PropTypes.any, // 'value' is optional and can be any type
-//   errMsg: PropTypes.string, // 'errMsg' is optional and must be a string
-//   style: PropTypes.object, // 'style' is optional and must be
-//   required: PropTypes.bool, // 'required' is optional and must be
-// };

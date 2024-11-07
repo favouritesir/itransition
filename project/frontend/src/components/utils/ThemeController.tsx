@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { deviceAppearanceMode, setFavListener } from "../../utils/utils";
+import { deviceAppearanceMode, setFavListener } from "../../utils/appearances";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 setFavListener("#e2e8f0", "#0f172a");
 

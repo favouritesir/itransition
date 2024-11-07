@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { error, login, logout, register } from "../controllers/dev.contorller";
+import { error, login, logout, register } from "../controllers/dev.controller";
 import $response from "../services/response.services";
 import prisma from "../services/DB/prismaClient";
-import { userDB } from "../services/DB/Users.db";
+import DB from "../services/DB/db";
+import { createOn } from "../services/DB/V2/ppp.type.db";
+
 const devRoutes = Router();
 
 /************************************************************************************************* ROUTES */
@@ -14,16 +16,20 @@ devRoutes.get("/logout", logout);
 
 devRoutes.get("/", (req, res) => {
   async function test() {
-    const res = await userDB
-      .getUserById("111")
-      .select(["email", "blocked", "deleted"])
-      .fetch();
-    // const res2 = await prisma.users.findMany();
-    console.log(await res);
-  }
-  test();
+    let resp = await DB.getUsers()
+      // .for(["email", "password"])
+      // .if("13<=id<=16")
+      .descBy(["id"])
+      // .getQuery();
+      .fetchAll();
+    // .push({ deleted: true });
+    // .getQueryFilter(["where", "select", "include"]);
+    let val = createOn("API").data({});
 
-  $response(res).send({ code: 200, data: prisma.users.fields });
+    $response(res).send({ code: 200, data: resp });
+  }
+
+  test();
 });
 
 /************************************************************************************************* ERROR HANDLER */

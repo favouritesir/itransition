@@ -68,7 +68,7 @@ model Profiles {
 
   createdAt DateTime @default(now()) @db.Timestamptz() // UTC time
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz()
-  others    Json     @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
+  others    Json?    @db.JsonB //profilePic, bio, facebook, linkdin, youtube, ips, locations, favourites, hobby, institutes/orgs, etc
 
   user     Users       @relation("userProfile", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
   Language UiLanguages @relation("appLanguage", fields: [languageIndex], references: [id], onDelete: SetDefault, onUpdate: Cascade)
@@ -181,7 +181,7 @@ model Folders {
 //*************************************************************************************************************************** DOCUMENTATION ************************
 model Documents {
   id         BigInt  @id @default(autoincrement())
-  index      Int?    @db.SmallInt
+  index      Int?    @db.SmallInt // document index under folders or a spaces 
   spaceIndex Int     @db.SmallInt
   folder     BigInt?
   creator    BigInt
@@ -335,4 +335,8 @@ model API {
   owner Developers @relation("apiOwner", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([id, domain])
+}
+
+model TEST {
+  id Int @id
 }

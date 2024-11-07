@@ -1,6 +1,6 @@
 /*
- * Title: http status list
- * Description: all status for the application
+ * Title: response service
+ * Description: http status list & make a proper response formate
  * Author: Ashikur Rahman SA
  * Date: Monday, 21 -October-2024 (21:26:11)
  *
@@ -50,7 +50,7 @@ class Result {
       code,
       message: obj.msg || "",
       status: this.statusStr || allStatus[obj.code!] || "success",
-      data: obj.data || null,
+      data: obj.data || {},
       err: obj.err || allStatus[code] != "OK",
       hint: obj.hint || "",
       links: obj.links || null,
@@ -59,5 +59,19 @@ class Result {
 }
 
 export const $response = (res: Response) => new Result(res);
+
+// todo: delete this if no need
+export function $Response(res: ResType) {
+  const code = res.code || 200;
+  return {
+    code,
+    message: res.msg || "",
+    status: allStatus[res.code!] || "success",
+    data: res.data || {},
+    err: res.err || allStatus[code] != "OK",
+    hint: res.hint || "",
+    links: res.links || {},
+  };
+}
 
 export default $response;

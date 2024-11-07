@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import PageLoader from "../components/utils/PageLoader";
 
 // Adding types for props in AppRoutes component
 // interface AppRoutesProps {
@@ -17,5 +18,9 @@ export default function AppSkeletons() {
     // });
   }, []);
 
-  return <>skeletons</>;
+  return (
+    <>
+      <PageLoader />
+    </>
+  );
 }

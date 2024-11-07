@@ -1,13 +1,26 @@
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
+/************************************************************************************************* CONFIG */
 
 interface DecodedToken extends JwtPayload {
   id: string;
 }
 
-export const bHash = (str: any, slt: number = 10) => {
-  bcrypt.hashSync(str, slt);
+export const passHash = (str: any, slt: number = 10) => {
+  try {
+    return { hash: bcrypt.hashSync(str, slt) };
+  } catch (err) {
+    return { err };
+  }
+};
+
+export const passVerify = (pass: string, hash: string) => {
+  try {
+    return { isVerified: bcrypt.compareSync(pass, hash) };
+  } catch (err) {
+    return { err };
+  }
 };
 
 export const generateHash = (
